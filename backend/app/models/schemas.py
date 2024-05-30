@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from prisma.bases import BaseAccount, BaseLog, BaseNode, BasePlatform, BaseSetting
+from pydantic import Field
 
 # TODO: Split into different files;
 
@@ -10,27 +11,26 @@ from prisma.bases import BaseAccount, BaseLog, BaseNode, BasePlatform, BaseSetti
 class AccountCreate(BaseAccount):
     username: str
     password: str
-    name: str
     platformId: int
-    extraInfos: Optional[str] = None
+    extraInfos: str = ""
 
 
 class AccountUpdate(BaseAccount):
     username: Optional[str] = None
     password: Optional[str] = None
-    name: Optional[str] = None
     platformId: Optional[int] = None
-    extraInfos: Optional[str] = None
+    extraInfos: Optional[str] = ""
 
 
 class AccountOut(BaseAccount):
     id: int
     username: str
     password: str
-    name: str
     platformId: int
     extraInfos: str
-    products: List["NodeOut"] = []
+    products: Optional[List["NodeOut"]] = []
+
+    platform: Optional["PlatformOut"] = Field(alias="Platform")
 
     class Config:
         from_attributes = True
