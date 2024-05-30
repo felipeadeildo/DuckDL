@@ -1,5 +1,5 @@
-from pydantic_settings import BaseSettings
 from app.models.schemas import PlatformCreate
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     result_backend: str = "rcp://"
 
     downloaders: list[PlatformCreate] = [
-        PlatformCreate(name="Youtube", url="https://youtube.com", version=1.0),
+        PlatformCreate(name="Youtube", url="youtube.com", version=1.0),
     ]
 
 

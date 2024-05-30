@@ -39,6 +39,8 @@ async def startup():
                     },
                     data={
                         "version": platform_downloder.version,
+                        "name": platform_downloder.name,
+                        "url": platform_downloder.url,
                     },
                 )
 
