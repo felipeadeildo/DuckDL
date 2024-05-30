@@ -11,9 +11,8 @@ generator client {
 
 model Account {
   id         Int    @id @default(autoincrement())
-  username   String @unique
+  username   String
   password   String
-  name       String
   platformId Int
   extraInfos String // Storing JSON as a string
 
