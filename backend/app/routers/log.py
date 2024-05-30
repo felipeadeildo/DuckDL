@@ -1,12 +1,9 @@
-from app.models import schemas
+from app.models.schemas import LogOut
 from fastapi import APIRouter
-from prisma.models import Log
 
 router = APIRouter()
 
 
-@router.get("", response_model=list[schemas.LogOut])
+@router.get("", response_model=list[LogOut])
 async def list_logs():
-    logs = await Log.prisma().find_many()
-
-    return logs
+    return await LogOut.prisma().find_many()

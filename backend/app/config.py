@@ -1,10 +1,15 @@
 from pydantic_settings import BaseSettings
+from app.models.schemas import PlatformCreate
 
 
 class Settings(BaseSettings):
-    app_name: str = "CoursesDownloader"
-    broker_url: str = "redis://localhost:6379/0"
-    result_backend: str = "redis://localhost:6379/0"
+    app_name: str = "Course Downloader App"
+    broker_url: str = "amqp://guest:guest@rabbitmq//"
+    result_backend: str = "rcp://"
+
+    downloaders: list[PlatformCreate] = [
+        PlatformCreate(name="Youtube", url="https://youtube.com", version=1.0),
+    ]
 
 
 settings = Settings()

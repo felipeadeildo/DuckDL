@@ -1,19 +1,47 @@
-from app.models.schemas import LogCreate
+from app.config import settings
 from prisma import Prisma
+from prisma.models import Log, Platform
 
-prisma = Prisma(auto_register=True)
+db = Prisma(auto_register=True)
 
 
 async def startup():
-    await prisma.connect()
+    await db.connect()
 
-    await LogCreate.prisma().create(
+    await Log.prisma().create(
         {
             "message": "Inicia aplicação e base de dados",
             "logLevel": "INFO",
         }
     )
 
+    for platform_downloder in settings.downloaders:
+        downloader = await Platform.prisma().find_first(
+            where={
+                "name": platform_downloder.name,
+                "url": platform_downloder.url,
+            }
+        )
+
+        if not downloader:
+            await Platform.prisma().create(
+                {
+                    "name": platform_downloder.name,
+                    "url": platform_downloder.url,
+                    "version": platform_downloder.version,
+                }
+            )
+        else:
+            if downloader.version != platform_downloder.version:
+                await Platform.prisma().update(
+                    where={
+                        "id": downloader.id,
+                    },
+                    data={
+                        "version": platform_downloder.version,
+                    },
+                )
+
 
 async def shutdown():
-    await prisma.disconnect()
+    await db.disconnect()

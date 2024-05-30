@@ -1,8 +1,9 @@
 from datetime import datetime
 from typing import List, Optional
 
-
 from prisma.bases import BaseAccount, BaseLog, BaseNode, BasePlatform, BaseSetting
+
+# TODO: Split into different files;
 
 
 # Modelos Account
@@ -11,6 +12,7 @@ class AccountCreate(BaseAccount):
     password: str
     name: str
     platformId: int
+    extraInfos: Optional[str] = None
 
 
 class AccountUpdate(BaseAccount):
@@ -38,6 +40,7 @@ class AccountOut(BaseAccount):
 class PlatformCreate(BasePlatform):
     name: str
     url: str
+    version: float
 
 
 class PlatformUpdate(BasePlatform):
@@ -49,6 +52,7 @@ class PlatformOut(BasePlatform):
     id: int
     name: str
     url: str
+    version: float
 
     class Config:
         from_attributes = True
