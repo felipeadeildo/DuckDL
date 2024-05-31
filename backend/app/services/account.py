@@ -14,6 +14,7 @@ class AccountService:
                 "password": account.password,
                 "platformId": account.platformId,
                 "extraInfos": account.extraInfos,
+                "status": "stopped",
             }
         )
 
@@ -25,7 +26,9 @@ class AccountService:
         return await self.prisma.account.delete(where={"id": account_id})
 
     async def get_account(self, account_id: int):
-        return await self.prisma.account.find_unique(where={"id": account_id})
+        return await self.prisma.account.find_unique(
+            where={"id": account_id}, include={"Platform": True}
+        )
 
     async def get_accounts(self, query: str):
         return await self.prisma.account.find_many(
