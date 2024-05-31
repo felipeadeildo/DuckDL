@@ -51,11 +51,6 @@ class PlatformDownloader(ABC):
         pass
 
     @abstractmethod
-    async def get_status(self):
-        """Get the current state of the account download/mapping process"""
-        pass
-
-    @abstractmethod
     async def list_products(self):
         """This will list all products with depth of 1 only for select the product to map"""
         pass

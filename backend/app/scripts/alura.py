@@ -37,3 +37,7 @@ class AluraDownloader(PlatformDownloader):
 
         if not self.is_logged:
             return
+
+    async def map_product(self, node: ...): ...
+
+    async def start_download(self, node: ...): ...

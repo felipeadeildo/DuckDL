@@ -3,3 +3,6 @@ run:
 
 run-dev:
 	@uvicorn main:app --reload --host 0.0.0.0 --port 8000
+
+run-celery:
+	@celery -A app.tasks.celery_app worker --loglevel=info
