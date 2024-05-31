@@ -13,19 +13,16 @@ type LogsPagination = {
 
 const defaultValue = { data: [], total: 0 }
 
-const logs = ref<LogsPagination>(defaultValue)
-
-const { data, refresh: fetchLogs } = await useAsyncData<LogsPagination>("logs", () =>
+const { data: logsData, refresh: fetchLogs } = useAsyncData<LogsPagination>("logs", () =>
   $fetch("http://localhost:8000/log", {
-    params: {
-      page: page.value,
-      per_page: perPage.value,
-    },
+    params: { page: page.value, per_page: perPage.value },
   })
 )
 
+let timeoutId: ReturnType<typeof setTimeout>
+
 const autoRefresh = () => {
-  setTimeout(async () => {
+  timeoutId = setTimeout(async () => {
     await fetchLogs()
     autoRefresh()
   }, 10000)
@@ -35,13 +32,11 @@ watchEffect(() => {
   fetchLogs()
 })
 
-watch(data, () => {
-  if (data.value) {
-    logs.value = data.value
-  }
-})
-
 autoRefresh()
+
+onBeforeUnmount(() => {
+  clearTimeout(timeoutId)
+})
 
 const columns = [
   {
@@ -65,15 +60,11 @@ const columns = [
     label: "Conta",
   },
 ]
-
-const total = computed(() => {
-  return logs.value ? logs.value.total : defaultValue.total
-})
 </script>
 
 <template>
   <UTable
-    :rows="logs ? logs.data : defaultValue.data"
+    :rows="(logsData || defaultValue).data"
     :columns="columns"
     :ui="{
       th: {
@@ -105,6 +96,10 @@ const total = computed(() => {
     </template>
   </UTable>
   <div class="flex justify-end px-3 py-3.5 border-t border-gray-200 dark:border-gray-700">
-    <UPagination v-model="page" :page-count="perPage" :total="total" />
+    <UPagination
+      v-model="page"
+      :page-count="perPage"
+      :total="logsData ? logsData.total : defaultValue.total"
+    />
   </div>
 </template>
