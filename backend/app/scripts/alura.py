@@ -1,4 +1,5 @@
 from bs4 import BeautifulSoup
+from fastapi.concurrency import run_in_threadpool
 
 from .base import NodeBase, PlatformDownloader
 
@@ -14,9 +15,11 @@ class AluraDownloader(PlatformDownloader):
 
     async def _login(self):
         self._create_session()
-        self.session.get(f"{self.BASE_URL}/loginForm")
 
-        res = self.session.post(
+        await run_in_threadpool(self.session.get, f"{self.BASE_URL}/loginForm")
+
+        res = await run_in_threadpool(
+            self.session.post,
             f"{self.BASE_URL}/signin",
             data={"username": self.account.username, "password": self.account.password},
         )
@@ -56,7 +59,9 @@ class AluraDownloader(PlatformDownloader):
         )
 
     async def __list_products(self) -> list[AluraNode]:
-        soup = self.get_soup(self.session.get, f"{self.BASE_URL}/courses")
+        soup = await run_in_threadpool(
+            self.get_soup, self.session.get, f"{self.BASE_URL}/courses"
+        )
 
         products = []
         while True:
@@ -76,8 +81,10 @@ class AluraDownloader(PlatformDownloader):
             )
             if not next_page:
                 break
-            soup = self.get_soup(
-                self.session.get, f"{self.BASE_URL}/{next_page.get('href')}"
+            soup = await run_in_threadpool(
+                self.get_soup,
+                self.session.get,
+                f"{self.BASE_URL}/{next_page.get('href')}",
             )
 
         await self.log_service.debug(

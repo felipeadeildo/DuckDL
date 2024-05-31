@@ -1,11 +1,10 @@
-from celery import Celery
+import dramatiq
+from app.config import settings
+from dramatiq.middleware import AsyncIO
+from dramatiq.brokers.rabbitmq import RabbitmqBroker
 
-celery_app = Celery("worker")
-celery_app.config_from_object("celeryconfig")
+rabbitmq_broker = RabbitmqBroker(url=settings.rabbitmq_url)
 
-# lazy import:
-to_import = [("app.tasks.account", "list_account_products_task")]
+rabbitmq_broker.add_middleware(AsyncIO())
 
-for module, task in to_import:
-    module = __import__(module, fromlist=[task])
-    celery_app.register_task(getattr(module, task))
+dramatiq.set_broker(rabbitmq_broker)

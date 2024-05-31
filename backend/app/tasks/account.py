@@ -1,13 +1,14 @@
-import asyncio
+import json
 
-
+import dramatiq
 from app.prisma import db
 from app.scripts import downloaders
-from app.tasks import celery_app
 from prisma.models import Account, Platform
 
 
-async def list_account_products(account: dict):
+@dramatiq.actor
+async def list_account_products_task(account_raw: str):
+    account = json.loads(account_raw)
     if not db.is_connected():
         await db.connect()
 
@@ -25,9 +26,3 @@ async def list_account_products(account: dict):
     await downloader_instance.list_products()
 
     await db.disconnect()
-
-
-@celery_app.task
-def list_account_products_task(account: dict):
-    asyncio.run(list_account_products(account))
-    return []

@@ -42,5 +42,5 @@ async def list_account_products(account_id: int):
     if not account:
         raise ValueError(f"Account {account_id} not found")
 
-    task = list_account_products_task.delay(account.model_dump())
-    return {"task_id": task.id}
+    list_account_products_task.send(account.model_dump_json())
+    return "ok"

@@ -5,7 +5,4 @@ dev:
 	@uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
 celery:
-	@celery -A app.tasks.celery_app worker --loglevel=info
-
-flower:
-	@celery -A app.tasks.celery_app flower
+	@dramatiq worker
