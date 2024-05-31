@@ -1,6 +1,7 @@
 from app.config import settings
 
-result_backend = settings.result_backend
+broker_url = settings.broker_url
+
 
 task_serializer = "json"
 result_serializer = "json"

@@ -1,15 +1,9 @@
-from abc import ABC, abstractmethod
+import asyncio
+
+from celery import Task
 
 
-class BaseDownloadScript(ABC):
-    @abstractmethod
-    def start_download(self):
-        pass
-
-    @abstractmethod
-    def get_status(self):
-        pass
-
-    @abstractmethod
-    def map_nodes(self):
-        pass
+# TODO: fix async tasks wrapper (its broken)
+class AsyncCeleryTask(Task):
+    def __call__(self, *args, **kwargs):
+        return asyncio.run(self.run(*args, **kwargs))
