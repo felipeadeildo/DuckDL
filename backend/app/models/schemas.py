@@ -13,6 +13,11 @@ class AccountCreate(BaseAccount):
     password: str
     platformId: int
     extraInfos: str = ""
+    status: str = "stopped"
+
+
+class AccountStatus(BaseAccount):
+    status: str
 
 
 class AccountUpdate(BaseAccount):

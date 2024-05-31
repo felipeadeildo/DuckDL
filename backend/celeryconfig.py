@@ -1,6 +1,7 @@
 from app.config import settings
 
 broker_url = settings.broker_url
+result_backend = settings.result_backend
 
 worker_redirect_stdouts = False
 

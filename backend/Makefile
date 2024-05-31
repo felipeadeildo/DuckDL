@@ -1,8 +1,11 @@
 run:
 	@uvicorn main:app --host 0.0.0.0 --port 8000
 
-run-dev:
+dev:
 	@uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
-run-celery:
+celery:
 	@celery -A app.tasks.celery_app worker --loglevel=info
+
+flower:
+	@celery -A app.tasks.celery_app flower

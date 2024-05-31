@@ -1,4 +1,6 @@
-from app.models.schemas import AccountCreate
+from typing import Literal
+
+from app.models.schemas import AccountCreate, AccountStatus
 from prisma import Prisma
 from prisma.types import AccountUpdateInput
 
@@ -35,3 +37,30 @@ class AccountService:
             where={"username": {"contains": query}},
             include={"Platform": True},
         )
+
+    async def get_account_status(self, account_id: int) -> str:
+        account = await AccountStatus.prisma().find_unique(
+            where={"id": account_id},
+        )
+
+        if not account:
+            raise ValueError(f"Account {account_id} not found")
+
+        return account.status
+
+    async def set_account_status(
+        self,
+        account_id: int,
+        status: Literal[
+            "stopped",
+            "error",
+            "listing_products",
+            "products_listed",
+            "downloading_products",
+        ],
+    ):
+        account = await self.get_account(account_id)
+        if not account:
+            raise ValueError(f"Account {account_id} not found")
+
+        return await self.update_account(account_id, {"status": status})

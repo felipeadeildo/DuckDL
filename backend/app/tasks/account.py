@@ -1,5 +1,6 @@
 import asyncio
 
+
 from app.prisma import db
 from app.scripts import downloaders
 from app.tasks import celery_app
@@ -29,4 +30,4 @@ async def list_account_products(account: dict):
 @celery_app.task
 def list_account_products_task(account: dict):
     asyncio.run(list_account_products(account))
-    return True
+    return []
