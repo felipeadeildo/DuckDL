@@ -27,6 +27,7 @@ class AccountOut(BaseAccount):
     username: str
     password: str
     platformId: int
+    status: str
     extraInfos: str
     products: Optional[List["NodeOut"]] = []
 
@@ -41,6 +42,7 @@ class PlatformCreate(BasePlatform):
     name: str
     url: str
     version: float
+    key: str
 
 
 class PlatformUpdate(BasePlatform):

@@ -14,6 +14,7 @@ model Account {
   username   String
   password   String
   platformId Int
+  status     String // can be 'stoped', 'listing_products', 'downloading_products' or 'error'
   extraInfos String // Storing JSON as a string
 
   Platform Platform @relation(fields: [platformId], references: [id])
@@ -24,6 +25,7 @@ model Account {
 model Platform {
   id        Int      @id @default(autoincrement())
   name      String
+  key       String
   url       String
   version   Float
   addedAt   DateTime @default(now())

@@ -5,6 +5,7 @@ export type Account = {
   platformId: number
   extraInfos: string
   products: Node[]
+  status: string
 
   Platform: Platform
 }

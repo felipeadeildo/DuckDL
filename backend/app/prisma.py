@@ -18,8 +18,7 @@ async def startup():
     for platform_downloder in settings.downloaders:
         downloader = await Platform.prisma().find_first(
             where={
-                "name": platform_downloder.name,
-                "url": platform_downloder.url,
+                "key": platform_downloder.key,
             }
         )
 
@@ -29,6 +28,7 @@ async def startup():
                     "name": platform_downloder.name,
                     "url": platform_downloder.url,
                     "version": platform_downloder.version,
+                    "key": platform_downloder.key,
                 }
             )
         else:

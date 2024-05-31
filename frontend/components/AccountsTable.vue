@@ -23,12 +23,19 @@ const columns = [
     sortable: true,
     class: "text-center",
   },
+  { key: "status", label: "Estado", class: "text-center" },
   {
     key: "actions",
     label: "Ações",
     class: "text-center",
   },
 ]
+
+const startListProducts = async (account: Account) => {
+  await $fetch(`http://localhost:8000/account/${account.id}/start_list_products`, {
+    method: "POST",
+  })
+}
 </script>
 
 <template>
@@ -39,7 +46,9 @@ const columns = [
 
     <template #actions-data="{ row }">
       <div class="space-x-2">
-        <UButton icon="i-heroicons-magnifying-glass">Mapear Produtos</UButton>
+        <UButton icon="i-heroicons-magnifying-glass" @click="startListProducts(row)"
+          >Listar Produtos</UButton
+        >
         <UButton icon="i-heroicons-trash" variant="outline" color="red">Excluir</UButton>
       </div>
     </template>

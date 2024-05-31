@@ -4,11 +4,10 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     app_name: str = "Course Downloader App"
-    broker_url: str = "amqp://guest:guest@rabbitmq//"
-    result_backend: str = "rcp://"
+    broker_url: str = "amqp://guest:guest@localhost:5672//"
 
     downloaders: list[PlatformCreate] = [
-        PlatformCreate(name="Youtube", url="youtube.com", version=1.0),
+        PlatformCreate(name="Alura", url="alura.com.br", version=1.0, key="alura"),
     ]
 
 

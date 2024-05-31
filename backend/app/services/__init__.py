@@ -1,3 +1,4 @@
-from .account_service import AccountService
+from .account import AccountService
+from .log import LogService
 
-__all__ = ["AccountService"]
+__all__ = ["AccountService", "LogService"]
