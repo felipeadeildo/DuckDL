@@ -3,8 +3,6 @@ from bs4 import BeautifulSoup
 from .base.node import Node
 from .base.platform import PlatformDownloader
 
-# TODO: Move all the log_service method calls to methods of the Node (abstract)
-
 
 class AluraNode(Node):
     async def download(self): ...
@@ -28,55 +26,26 @@ class AluraDownloader(PlatformDownloader):
         soup = BeautifulSoup(res.content, "html.parser")
 
         if not soup.find("button", {"class": "user-name"}):
-            await self.log_service.error(
-                "Falha ao fazer login, verifique as credenciais.",
-                account_id=self.account.id,
-            )
+            await self.log("login_error")
             await self.account_service.set_account_status(self.account.id, "error")
             self.is_logged = False
         else:
-            await self.log_service.debug(
-                "Login efetuado com sucesso!", account_id=self.account.id
-            )
+            await self.log("login_success")
             self.is_logged = True
 
-    async def list_products(self):
-        current_status = await self.account_service.get_account_status(self.account.id)
-        if current_status not in ("stopped", "error", "products_listed"):
-            await self.log_service.error(
-                f"A conta encontra-se em um status que impede a listagem de produtos: {current_status}",
-                account_id=self.account.id,
-            )
-            return
-
-        if current_status == "products_listed":
-            await self.account_service.delete_products(self.account.id)
-            await self.log_service.info(
-                "Produtos removidos para reiniciar a listagem",
-                account_id=self.account.id,
-            )
-
-        await self.account_service.set_account_status(
-            self.account.id, "listing_products"
-        )
-
-        await self.log_service.debug(
-            "Iniciando a lisgem de produtos.",
-            account_id=self.account.id,
-        )
-
+    async def _list_products(self):
         if not self.is_logged:
             await self._login()
 
         if not self.is_logged:
             return
 
-        await self.__list_products()
+        await self.__get_products()
         await self.account_service.set_account_status(
             self.account.id, "products_listed"
         )
 
-    async def __list_products(self) -> list[AluraNode]:
+    async def __get_products(self) -> list[AluraNode]:
         soup = await self.get_soup(self.session.get, f"{self.BASE_URL}/courses")
 
         products = []
@@ -86,7 +55,7 @@ class AluraDownloader(PlatformDownloader):
                 course = {
                     "name": course_card.get("data-course-name"),
                     "type": "course",
-                    "url": f"{self.BASE_URL}{course_card.a.get('href')}",
+                    "url": f"{self.BASE_URL}/{course_card.a.get('href')}",
                     "session": self.session,
                     "prisma": self.prisma,
                     "account": self.account,
@@ -102,12 +71,10 @@ class AluraDownloader(PlatformDownloader):
                 break
 
             soup = await self.get_soup(
-                self.session.get, f"{self.BASE_URL}{next_page.get('href')}"
+                self.session.get, f"{self.BASE_URL}/{next_page.get('href')}"
             )
 
-        await self.log_service.debug(
-            f"Encontrados {len(products)} cursos na conta.", account_id=self.account.id
-        )
+        await self.log("account_products_listed_success", count=len(products))
 
         return products
 
