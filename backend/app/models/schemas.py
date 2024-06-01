@@ -139,6 +139,8 @@ class NodeOut(BaseNode):
     children: Optional[List["NodeOut"]] = []
     accountId: int
 
+    Account: AccountOut
+
     class Config:
         from_attributes = True
 
