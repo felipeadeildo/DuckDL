@@ -28,10 +28,6 @@ const autoRefresh = () => {
   }, 10000)
 }
 
-watchEffect(() => {
-  fetchLogs()
-})
-
 autoRefresh()
 
 onBeforeUnmount(() => {

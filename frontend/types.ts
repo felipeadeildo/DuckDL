@@ -1,3 +1,10 @@
+export type AccountStatus =
+  | "stopped"
+  | "error"
+  | "listing_products"
+  | "products_listed"
+  | "downloading_products"
+
 export type Account = {
   id: number
   username: string
@@ -5,7 +12,7 @@ export type Account = {
   platformId: number
   extraInfos: string
   products: Node[]
-  status: string
+  status: AccountStatus
 
   Platform: Platform
 }

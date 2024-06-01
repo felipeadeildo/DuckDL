@@ -4,6 +4,21 @@ import type { Account } from "~/types"
 const { data: accounts } = await useAsyncData<Account[]>("accounts", () =>
   $fetch("http://localhost:8000/account")
 )
+
+let timeoutId: ReturnType<typeof setTimeout>
+
+const autoRefresh = () => {
+  timeoutId = setTimeout(async () => {
+    await refreshNuxtData("accounts")
+    autoRefresh()
+  }, 5000)
+}
+
+onBeforeUnmount(() => {
+  clearTimeout(timeoutId)
+})
+
+autoRefresh()
 </script>
 
 <template>

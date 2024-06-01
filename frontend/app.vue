@@ -13,5 +13,6 @@ useHead({
     <Suspense>
       <NuxtPage />
     </Suspense>
+    <UNotifications />
   </ClientOnly>
 </template>

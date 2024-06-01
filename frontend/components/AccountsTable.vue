@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Account } from "~/types"
+import { getStatus } from "~/utils/account"
 
 defineProps<{
   accounts: Account[]
@@ -30,12 +31,6 @@ const columns = [
     class: "text-center",
   },
 ]
-
-const startListProducts = async (account: Account) => {
-  await $fetch(`http://localhost:8000/account/${account.id}/start_list_products`, {
-    method: "POST",
-  })
-}
 </script>
 
 <template>
@@ -44,13 +39,12 @@ const startListProducts = async (account: Account) => {
       {{ `${row.Platform.name} - ${row.Platform.url} (v${row.Platform.version})` }}
     </template>
 
+    <template #status-data="{ row }">
+      {{ getStatus(row) }}
+    </template>
+
     <template #actions-data="{ row }">
-      <div class="space-x-2">
-        <UButton icon="i-heroicons-magnifying-glass" @click="startListProducts(row)"
-          >Listar Produtos</UButton
-        >
-        <UButton icon="i-heroicons-trash" variant="outline" color="red">Excluir</UButton>
-      </div>
+      <AccountActions :account="row" />
     </template>
   </UTable>
 </template>
