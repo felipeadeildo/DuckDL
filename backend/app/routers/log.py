@@ -1,19 +1,13 @@
 from typing import Optional
 
-from app.models.schemas import LogOut
+from app.models.pagination import LogPagination
 from app.prisma import db
 from app.services.log import LogService
 from fastapi import APIRouter
-from pydantic import BaseModel
 
 router = APIRouter()
 
 service = LogService(db)
-
-
-class LogPagination(BaseModel):
-    total: int
-    data: list[LogOut]
 
 
 @router.get("", response_model=LogPagination)

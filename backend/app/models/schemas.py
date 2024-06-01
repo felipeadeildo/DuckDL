@@ -136,7 +136,8 @@ class NodeOut(BaseNode):
     unit: Optional[str] = None
     extraInfos: str
     customName: Optional[str] = None
-    children: List["NodeOut"] = []
+    children: Optional[List["NodeOut"]] = []
+    accountId: int
 
     class Config:
         from_attributes = True

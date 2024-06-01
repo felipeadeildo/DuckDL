@@ -1,7 +1,8 @@
 from bs4 import BeautifulSoup
-from fastapi.concurrency import run_in_threadpool
 
 from .base import NodeBase, PlatformDownloader
+
+# TODO: Move all the log_service method calls to methods of the Node (abstract)
 
 
 class AluraNode(NodeBase):
@@ -16,10 +17,9 @@ class AluraDownloader(PlatformDownloader):
     async def _login(self):
         self._create_session()
 
-        await run_in_threadpool(self.session.get, f"{self.BASE_URL}/loginForm")
+        await self.session.get(f"{self.BASE_URL}/loginForm")
 
-        res = await run_in_threadpool(
-            self.session.post,
+        res = await self.session.post(
             f"{self.BASE_URL}/signin",
             data={"username": self.account.username, "password": self.account.password},
         )
@@ -31,6 +31,7 @@ class AluraDownloader(PlatformDownloader):
                 "Falha ao fazer login, verifique as credenciais.",
                 account_id=self.account.id,
             )
+            await self.account_service.set_account_status(self.account.id, "error")
             self.is_logged = False
         else:
             await self.log_service.debug(
@@ -40,11 +41,20 @@ class AluraDownloader(PlatformDownloader):
 
     async def list_products(self):
         current_status = await self.account_service.get_account_status(self.account.id)
-        if current_status != "stopped":
+        if current_status not in ("stopped", "error", "products_listed"):
+            await self.log_service.error(
+                f"A conta encontra-se em um status que impede a listagem de produtos: {current_status}",
+                account_id=self.account.id,
+            )
             return
 
         await self.account_service.set_account_status(
             self.account.id, "listing_products"
+        )
+
+        await self.log_service.debug(
+            "Iniciando a lisgem de produtos.",
+            account_id=self.account.id,
         )
 
         if not self.is_logged:
@@ -59,9 +69,7 @@ class AluraDownloader(PlatformDownloader):
         )
 
     async def __list_products(self) -> list[AluraNode]:
-        soup = await run_in_threadpool(
-            self.get_soup, self.session.get, f"{self.BASE_URL}/courses"
-        )
+        soup = await self.get_soup(self.session.get, f"{self.BASE_URL}/courses")
 
         products = []
         while True:
@@ -70,21 +78,23 @@ class AluraDownloader(PlatformDownloader):
                 course = {
                     "name": course_card.get("data-course-name"),
                     "type": "course",
-                    "url": f"{self.BASE_URL}/{course_card.a.get('href')}",
+                    "url": f"{self.BASE_URL}{course_card.a.get('href')}",
                     "session": self.session,
                     "prisma": self.prisma,
+                    "account": self.account,
                 }
-                products.append(AluraNode(**course))
+                node = AluraNode(**course)
+                await node.flush_node_db()
+                products.append(node)
 
             next_page = self.valid_tag(
                 soup.find("a", {"class": "busca-paginacao-linksProximos"})
             )
             if not next_page:
                 break
-            soup = await run_in_threadpool(
-                self.get_soup,
-                self.session.get,
-                f"{self.BASE_URL}/{next_page.get('href')}",
+
+            soup = await self.get_soup(
+                self.session.get, f"{self.BASE_URL}{next_page.get('href')}"
             )
 
         await self.log_service.debug(

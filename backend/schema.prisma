@@ -18,7 +18,7 @@ model Account {
   extraInfos String // Storing JSON as a string
 
   Platform Platform @relation(fields: [platformId], references: [id])
-  products Node[]   @relation("AccountProducts")
+  Nodes    Node[]   @relation("AccountToNode")
   Logs     Log[]
 }
 
@@ -61,12 +61,13 @@ model Node {
   totalSize   Int? // Optional total size for leaf nodes
   currentSize Int? // Optional current size for leaf nodes
   unit        String? // Optional unit for the size
+  accountId   Int
 
-  parent   Node?     @relation("NodeToNode", fields: [parentId], references: [id])
-  children Node[]    @relation("NodeToNode")
-  accounts Account[] @relation("AccountProducts")
+  parent   Node?  @relation("NodeToNode", fields: [parentId], references: [id])
+  children Node[] @relation("NodeToNode")
 
-  Logs Log[]
+  Account Account @relation(fields: [accountId], references: [id], name: "AccountToNode", onDelete: Cascade)
+  Logs    Log[]
 }
 
 model Setting {

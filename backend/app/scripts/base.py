@@ -12,9 +12,42 @@ from prisma import Prisma
 from prisma.models import Account, Setting
 
 
+class AsyncSession(requests.Session):
+    """Um cliente async para requests (gambiarra)"""
+
+    async def get(self, url, params=None, **kwargs):
+        return await asyncio.to_thread(
+            requests.Session.get, self, url, params=params, **kwargs
+        )
+
+    async def options(self, url, **kwargs):
+        return await asyncio.to_thread(requests.Session.options, self, url, **kwargs)
+
+    async def head(self, url, **kwargs):
+        return await asyncio.to_thread(requests.Session.head, self, url, **kwargs)
+
+    async def post(self, url, data=None, json=None, **kwargs):
+        return await asyncio.to_thread(
+            requests.Session.post, self, url, data=data, json=json, **kwargs
+        )
+
+    async def put(self, url, data=None, **kwargs):
+        return await asyncio.to_thread(
+            requests.Session.put, self, url, data=data, **kwargs
+        )
+
+    async def patch(self, url, data=None, **kwargs):
+        return await asyncio.to_thread(
+            requests.Session.patch, self, url, data=data, **kwargs
+        )
+
+    async def delete(self, url, **kwargs):
+        return await asyncio.to_thread(requests.Session.delete, self, url, **kwargs)
+
+
 class PlatformDownloader(ABC):
     BASE_URL: str
-    session: requests.Session
+    session: AsyncSession
 
     def __init__(self, prisma: Prisma, account: Account, settings: list[Setting]):
         self.prisma = prisma
@@ -29,12 +62,13 @@ class PlatformDownloader(ABC):
 
     def _create_session(self, use_cloudscraper: bool = False):
         """Create a requests.Session instance to make requests "completely" safe"""
+        async_session = AsyncSession()
         if use_cloudscraper:
             from cloudscraper import create_scraper
 
-            self.session = create_scraper()
+            self.session = create_scraper(async_session)  # type: ignore
         else:
-            self.session = requests.Session()
+            self.session = async_session
             # TODO: get a user-agent from a random.choice()
             self.session.headers.update(
                 {
@@ -62,8 +96,8 @@ class PlatformDownloader(ABC):
         """This will list all products with depth of 1 only for select the product to map"""
         pass
 
-    def get_soup(self, method: Callable, url: str, *args, **kwargs):
-        res = method(url, *args, **kwargs)
+    async def get_soup(self, method: Callable, url: str, *args, **kwargs):
+        res = await method(url, *args, **kwargs)
         return BeautifulSoup(res.content, "html.parser")
 
     @classmethod
@@ -125,6 +159,7 @@ class NodeBase(NodeProperties):
         type: str,
         session: requests.Session,
         prisma: Prisma,
+        account: Account,
         *,
         id: Optional[int] = None,
         order: Optional[int] = None,
@@ -142,21 +177,18 @@ class NodeBase(NodeProperties):
         self.parent = parent
         self.children = children
         self.extra_infos = extra_infos
+        self.account = account
+        self.__id = id
 
         self.node_service = NodeService(prisma)
 
-        if asyncio.get_event_loop().is_running():
-            asyncio.create_task(self._load_node_db(id))
-        else:
-            asyncio.run(self._load_node_db(id))
-
-    async def _load_node_db(self, node_id: Optional[int]):
-        if node_id:
-            self._node = await self.node_service.get_node(node_id)
+    async def flush_node_db(self):
+        if getattr(self, "_node", None):
+            return
+        if self.__id:
+            self._node = await self.node_service.get_node(self.__id)
             if not self._node:
-                raise ValueError(f"Node with id {node_id} not found")
-            else:
-                self.id = self._node.id
+                raise ValueError(f"Node with id {self.__id} not found")
         else:
             self._node = await self.node_service.create_node(
                 {
@@ -166,8 +198,11 @@ class NodeBase(NodeProperties):
                     "order": self.order,
                     "parentId": self.parent.id if self.parent else None,
                     "extraInfos": json.dumps(self.extra_infos),
+                    "accountId": self.account.id,
                 }
             )
+
+        self.id = self._node.id
 
     @abstractmethod
     async def download(self):

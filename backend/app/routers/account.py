@@ -1,3 +1,4 @@
+from app.models.pagination import NodePagination
 from app.models.schemas import AccountCreate, AccountOut
 from app.prisma import db
 from app.services import AccountService
@@ -42,5 +43,14 @@ async def list_account_products(account_id: int):
     if not account:
         raise ValueError(f"Account {account_id} not found")
 
-    list_account_products_task.send(account.model_dump_json())
+    list_account_products_task(account.model_dump_json())
     return "ok"
+
+
+@router.get("/{account_id}/products", response_model=NodePagination)
+async def get_account_products(
+    account_id: int, query: str = "", page: int = 1, per_page: int = 10
+):
+    skip = (page - 1) * per_page
+    take = per_page
+    return await service.get_account_products(account_id, query, skip, take)

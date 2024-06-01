@@ -64,3 +64,31 @@ class AccountService:
             raise ValueError(f"Account {account_id} not found")
 
         return await self.update_account(account_id, {"status": status})
+
+    async def get_account_products(
+        self, account_id: int, query: str, skip: int, take: int
+    ):
+        account = await self.get_account(account_id)
+        if not account:
+            raise ValueError(f"Account {account_id} not found")
+
+        async with self.prisma.tx() as transaction:
+            products = await transaction.node.find_many(
+                where={
+                    "accountId": account_id,
+                    "name": {"contains": query},
+                    "parentId": None,
+                },
+                skip=skip,
+                take=take,
+            )
+
+            count = await transaction.node.count(
+                where={
+                    "accountId": account_id,
+                    "name": {"contains": query},
+                    "parentId": None,
+                }
+            )
+
+        return {"nodes": products, "total": count}
