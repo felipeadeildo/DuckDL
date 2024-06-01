@@ -11,7 +11,7 @@ defineProps<{
     <UTooltip
       :text="
         !canListProducts(account)
-          ? `Atualmente está ${getStatus(account)}`
+          ? `Atualmente está ${getAccountStatus(account)}`
           : 'Listar Produtos da Conta'
       "
     >

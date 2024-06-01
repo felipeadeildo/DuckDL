@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { Account } from "~/types"
-import { getStatus } from "~/utils/account"
 
 defineProps<{
   accounts: Account[]
@@ -40,7 +39,7 @@ const columns = [
     </template>
 
     <template #status-data="{ row }">
-      {{ getStatus(row) }}
+      {{ getAccountStatus(row) }}
     </template>
 
     <template #actions-data="{ row }">

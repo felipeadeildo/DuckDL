@@ -15,7 +15,7 @@ export const startListProducts = async (account: Account) => {
   })
 }
 
-export const getStatus = (account: Account) =>
+export const getAccountStatus = (account: Account) =>
   ACCOUNT_STATUS_TRANSLATION[account.status as AccountStatus]
 
 export const canListProducts = (account: Account) =>

@@ -35,12 +35,21 @@ export type Log = {
   Account?: Account
 }
 
+export type NodeStatus =
+  | "stopped"
+  | "downloading"
+  | "downloaded"
+  | "download_error"
+  | "mapping_error"
+  | "mapping"
+  | "mapped"
+
 export type Node = {
   id: number
   name: string
   type: string
   url?: string
-  status?: string
+  status: NodeStatus
   order?: number
   parentId?: number
   totalSize?: number
@@ -49,6 +58,8 @@ export type Node = {
   extraInfos: string
   customName?: string
   children: Node[]
+
+  Account: Account
 }
 
 export type Setting = {

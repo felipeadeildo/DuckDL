@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { ref, watch } from "vue"
 import type { Account, Node } from "~/types"
 
 const { account } = defineProps<{
@@ -17,7 +16,7 @@ type NodesPagination = {
 const data = ref<NodesPagination | null>(null)
 const pending = ref(false)
 
-const fetchData = async () => {
+const fetchData = async (clean: boolean = false) => {
   if (!isOpen.value) return
   pending.value = true
   try {
@@ -31,7 +30,11 @@ const fetchData = async () => {
         },
       }
     )
-    data.value = result
+    const currentNodes = clean ? [] : data.value?.nodes || []
+    data.value = {
+      nodes: [...currentNodes, ...result.nodes],
+      total: result.total,
+    }
   } catch (error) {
     console.error(error)
   } finally {
@@ -39,9 +42,12 @@ const fetchData = async () => {
   }
 }
 
-watch([isOpen, page], fetchData, { deep: true })
+watch([isOpen, page], () => fetchData(), { deep: true })
 
-watch(query, debounce(fetchData, 300))
+watch(
+  query,
+  debounce(() => fetchData(true), 500)
+)
 </script>
 
 <template>
@@ -49,7 +55,7 @@ watch(query, debounce(fetchData, 300))
     :text="
       canSelectDownloadProducts(account)
         ? 'Selecionar Cursos para Download'
-        : `Atualmente está ${getStatus(account)}`
+        : `Atualmente está ${getAccountStatus(account)}`
     "
   >
     <UButton
@@ -74,26 +80,31 @@ watch(query, debounce(fetchData, 300))
 
       <SelectProductMethodsHelp />
 
-      <div v-if="pending" class="flex justify-center items-center gap-3 my-4">
+      <div v-if="pending && !data" class="flex justify-center items-center gap-3 my-4">
         <UIcon name="i-heroicons-arrow-path" class="animate-spin" />
         <span class="font-bold text-lg">Carregando produtos...</span>
       </div>
 
-      <div class="grid grid-cols-2 gap-2">
-        <UInput
-          v-model="query"
-          icon="i-heroicons-magnifying-glass-20-solid"
-          size="sm"
-          color="white"
-          class="col-span-2 mx-48"
-          :trailing="false"
-          placeholder="Pesquisar produto por nome..."
-        />
+      <UInput
+        v-model="query"
+        icon="i-heroicons-magnifying-glass-20-solid"
+        size="sm"
+        color="white"
+        class="mx-48"
+        :trailing="false"
+        placeholder="Pesquisar produto por nome..."
+      />
 
+      <div
+        class="grid grid-cols-2 gap-2 overflow-y-auto max-h-[80vh] mt-4 border-2 border-gray-700 rounded-lg"
+      >
         <UCard v-for="product in data?.nodes" :key="product.id">
           <template #header>
             <div class="flex gap-2 items-center justify-between">
-              <h1 class="font-medium">{{ product.name }}</h1>
+              <h1 class="font-medium">
+                {{ product.name }}
+                <UBadge color="blue">{{ getNodeStatus(product) }}</UBadge>
+              </h1>
 
               <UButton
                 v-if="product.url"
@@ -105,11 +116,35 @@ watch(query, debounce(fetchData, 300))
 
           <template #footer>
             <div class="flex justify-end gap-2">
-              <UButton variant="outline" color="blue">Marcar para download</UButton>
-              <UButton variant="outline">Marcar para mapeamento</UButton>
+              <UButton
+                variant="outline"
+                color="blue"
+                icon="i-heroicons-arrow-down-on-square"
+                @click="startNodeDownload(product)"
+                :disabled="!canStartDownload(product)"
+              >
+                Baixar
+              </UButton>
+              <UButton
+                variant="outline"
+                color="green"
+                icon="i-heroicons-document-magnifying-glass"
+                @click="!canStartMapping(product)"
+              >
+                Mapear
+              </UButton>
             </div>
           </template>
         </UCard>
+
+        <div
+          class="col-span-2 flex justify-center my-3"
+          v-if="data && data.total > data.nodes.length"
+        >
+          <UButton icon="i-heroicons-arrow-path" @click="page++" :loading="pending">
+            Carregar mais
+          </UButton>
+        </div>
       </div>
     </div>
   </UModal>
