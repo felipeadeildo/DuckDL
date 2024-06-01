@@ -1,11 +1,12 @@
 from bs4 import BeautifulSoup
 
-from .base import NodeBase, PlatformDownloader
+from .base.node import Node
+from .base.platform import PlatformDownloader
 
 # TODO: Move all the log_service method calls to methods of the Node (abstract)
 
 
-class AluraNode(NodeBase):
+class AluraNode(Node):
     async def download(self): ...
 
     async def load_children(self): ...
@@ -47,6 +48,13 @@ class AluraDownloader(PlatformDownloader):
                 account_id=self.account.id,
             )
             return
+
+        if current_status == "products_listed":
+            await self.account_service.delete_products(self.account.id)
+            await self.log_service.info(
+                "Produtos removidos para reiniciar a listagem",
+                account_id=self.account.id,
+            )
 
         await self.account_service.set_account_status(
             self.account.id, "listing_products"

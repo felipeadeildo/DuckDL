@@ -92,3 +92,8 @@ class AccountService:
             )
 
         return {"nodes": products, "total": count}
+
+    async def delete_products(self, account_id: int):
+        return await self.prisma.node.delete_many(
+            where={"accountId": account_id, "parentId": None}
+        )
