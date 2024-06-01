@@ -57,7 +57,7 @@ model Node {
   addedAt     DateTime @default(now())
   updatedAt   DateTime @updatedAt
   customName  String?
-  status      String   @default("pending") // Status of the node: downloading, downloaded, pending, error
+  status      String   @default("stopped") // Status of the node: stopped, downloading, downloaded, download_error, mapping_error, mapping, mapped
   totalSize   Int? // Optional total size for leaf nodes
   currentSize Int? // Optional current size for leaf nodes
   unit        String? // Optional unit for the size
