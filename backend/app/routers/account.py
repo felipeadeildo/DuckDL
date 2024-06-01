@@ -2,7 +2,7 @@ from app.models.pagination import NodePagination
 from app.models.schemas import AccountCreate, AccountOut
 from app.prisma import db
 from app.services import AccountService
-from app.tasks.account import list_account_products_task
+from app.tasks.account import download_product_task, list_account_products_task
 from fastapi import APIRouter
 from prisma.types import AccountUpdateInput
 
@@ -39,12 +39,8 @@ async def delete_account(account_id: int):
 
 @router.post("/{account_id}/start_list_products")
 async def list_account_products(account_id: int):
-    account = await service.get_account(account_id)
-    if not account:
-        raise ValueError(f"Account {account_id} not found")
-
-    list_account_products_task(account.model_dump_json())
-    return "ok"
+    list_account_products_task(account_id)
+    return "Ok"
 
 
 @router.get("/{account_id}/products", response_model=NodePagination)
@@ -54,3 +50,11 @@ async def get_account_products(
     skip = (page - 1) * per_page
     take = per_page
     return await service.get_account_products(account_id, query, skip, take)
+
+
+@router.post("/start_download_product/{product_id}")
+async def start_download_product(product_id: int):
+    # await service.set_account_status(account_id, "downloading_products")
+
+    download_product_task(product_id)
+    return "Ok"

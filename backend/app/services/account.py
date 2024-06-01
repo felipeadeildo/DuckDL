@@ -24,7 +24,6 @@ class AccountService:
         return await self.prisma.account.update(data=account, where={"id": account_id})
 
     async def delete_account(self, account_id: int):
-        # TODO: Delete products tree
         return await self.prisma.account.delete(where={"id": account_id})
 
     async def get_account(self, account_id: int):
@@ -81,6 +80,7 @@ class AccountService:
                 },
                 skip=skip,
                 take=take,
+                include={"Account": {"include": {"Platform": True}}},
             )
 
             count = await transaction.node.count(

@@ -9,6 +9,8 @@ MESSAGE_KEYS = Literal[
     "account_products_deleted",
     "account_start_listing_products",
     "account_products_listed_success",
+    "node_status_block_download",
+    "node_class_not_found",
 ]
 
 MESSAGE_CONTENTS: Mapping[MESSAGE_KEYS, Tuple[LOG_LEVELS, str]] = {
@@ -29,5 +31,13 @@ MESSAGE_CONTENTS: Mapping[MESSAGE_KEYS, Tuple[LOG_LEVELS, str]] = {
     "account_products_listed_success": (
         "info",
         "Produtos listados com sucesso. Quantidade de produtos encontrados: {count}",
+    ),
+    "node_status_block_download": (
+        "error",
+        "Atualmente o nó encontra-se no estado {status} que impede o download.",
+    ),
+    "node_class_not_found": (
+        "error",
+        "Classe do nó não encontrada. Verifique se o nó foi adicionado corretamente. Chave: {key}",
     ),
 }

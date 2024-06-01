@@ -3,10 +3,11 @@ from typing import Callable, Optional
 
 from app.scripts.base.constants import MESSAGE_CONTENTS, MESSAGE_KEYS
 from app.scripts.base.session import AsyncSession
+from app.scripts.node import nodes
 from app.services import AccountService, LogService
 from bs4 import BeautifulSoup, NavigableString, Tag
 from prisma import Prisma
-from prisma.models import Account, Setting
+from prisma.models import Account, Node, Setting
 
 
 class PlatformLogs:
@@ -29,10 +30,15 @@ class PlatformDownloader(ABC, PlatformLogs):
         self.account_service = AccountService(prisma)
         self.log_service = LogService(prisma)
         self.is_logged = False
-
-        for setting in settings:
-            # TODO; Consider the `setting.valueType` before setting the value
-            setattr(self, setting.key, setting.value)
+        self.settings = settings
+        # TODO: Implements the `use_cloudscraper` condition call
+        self._create_session()
+        self.NODE_DEFAULTS = {
+            "prisma": self.prisma,
+            "account": self.account,
+            "settings": self.settings,
+            "session": self.session,
+        }
 
     def _create_session(self, use_cloudscraper: bool = False):
         """Create a requests.Session instance to make requests "completely" safe"""
@@ -55,13 +61,26 @@ class PlatformDownloader(ABC, PlatformLogs):
         """Do the login process"""
         pass
 
-    @abstractmethod
-    async def start_download(self, node: ...):
+    async def start_download(self, node: Node):
         """This will start the download process of the given node (product)"""
-        pass
+        current_status = node.status
+        if current_status not in ("stopped", "downloaded", "download_error", "mapped"):
+            return await self.log("node_status_block_download", status=current_status)
+
+        key = node.Account.Platform.key  # type: ignore [account > platform > key isnt None]
+
+        node_class = nodes.get(key)
+        if node_class is None:
+            return await self.log("node_class_not_found", key=key)
+
+        node_dump = node.model_dump()
+        node_dump.update(self.NODE_DEFAULTS)
+
+        node_instance = node_class(**node_dump)
+        await node_instance.download()
 
     @abstractmethod
-    async def map_product(self, node: ...):
+    async def map_product(self, node: Node):
         """This will map all the tree of the given product (node)"""
         pass
 

@@ -1,21 +1,12 @@
+from app.scripts.base.platform import PlatformDownloader
+from app.scripts.node import AluraNode
 from bs4 import BeautifulSoup
-
-from .base.node import Node
-from .base.platform import PlatformDownloader
-
-
-class AluraNode(Node):
-    async def download(self): ...
-
-    async def load_children(self): ...
 
 
 class AluraDownloader(PlatformDownloader):
     BASE_URL = "https://cursos.alura.com.br"
 
     async def _login(self):
-        self._create_session()
-
         await self.session.get(f"{self.BASE_URL}/loginForm")
 
         res = await self.session.post(
@@ -56,9 +47,7 @@ class AluraDownloader(PlatformDownloader):
                     "name": course_card.get("data-course-name"),
                     "type": "course",
                     "url": f"{self.BASE_URL}/{course_card.a.get('href')}",
-                    "session": self.session,
-                    "prisma": self.prisma,
-                    "account": self.account,
+                    **self.NODE_DEFAULTS,
                 }
                 node = AluraNode(**course)
                 await node.flush_node_db()
@@ -78,6 +67,4 @@ class AluraDownloader(PlatformDownloader):
 
         return products
 
-    async def map_product(self, node: ...): ...
-
-    async def start_download(self, node: ...): ...
+    async def map_product(self, node): ...

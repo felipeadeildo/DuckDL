@@ -6,7 +6,7 @@ from typing import Optional
 from app.scripts.base.session import AsyncSession
 from app.services.node import NodeService
 from prisma import Prisma
-from prisma.models import Account
+from prisma.models import Account, Setting
 
 
 class NodeProperties(ABC):
@@ -62,6 +62,7 @@ class Node(NodeProperties):
         session: AsyncSession,
         prisma: Prisma,
         account: Account,
+        settings: list[Setting],
         *,
         id: Optional[int] = None,
         order: Optional[int] = None,
@@ -80,6 +81,7 @@ class Node(NodeProperties):
         self.children = children
         self.extra_infos = extra_infos
         self.account = account
+        self.settings = settings
         self.__id = id
 
         self.node_service = NodeService(prisma)
