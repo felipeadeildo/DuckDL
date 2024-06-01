@@ -14,7 +14,8 @@ uvicorn = "^0.30.0"
 pydantic-settings = "^2.2.1"
 cloudscraper = "^1.2.71"
 beautifulsoup4 = "^4.12.3"
-dramatiq = {extras = ["rabbitmq", "watch"], version = "^1.17.0"}
+huey = "^2.5.0"
+gevent = "^24.2.1"
 
 
 [tool.poetry.group.dev.dependencies]

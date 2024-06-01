@@ -4,5 +4,5 @@ run:
 dev:
 	@uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
-celery:
-	@dramatiq worker
+tasks:
+	@huey_consumer worker.huey -k greenlet -w 32

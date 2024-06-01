@@ -1,12 +1,13 @@
 import json
 
-import dramatiq
 from app.prisma import db
 from app.scripts import downloaders
+from app.tasks import huey_app, run_async_task
 from prisma.models import Account, Platform
 
 
-@dramatiq.actor
+@huey_app.task()
+@run_async_task
 async def list_account_products_task(account_raw: str):
     account = json.loads(account_raw)
     if not db.is_connected():
@@ -26,3 +27,5 @@ async def list_account_products_task(account_raw: str):
     await downloader_instance.list_products()
 
     await db.disconnect()
+
+    return True
