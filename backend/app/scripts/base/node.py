@@ -5,12 +5,13 @@ from typing import Optional
 
 from app.scripts.base.constants import MESSAGE_CONTENTS, MESSAGE_KEYS
 from app.scripts.base.session import AsyncSession
-from app.scripts.base.utils import get_node_default_params
+from app.scripts.base.utils import get_node_default_params, sanitize_name
 from app.services.log import LogService
 from app.services.node import NodeService
 from prisma import Prisma
-from prisma.models import Account, Setting
+from prisma.models import Account
 from prisma.models import Node as NodeDB
+from prisma.models import Setting
 
 
 class NodeLogs(ABC):
@@ -50,11 +51,10 @@ class NodeProperties(NodeLogs):
         if self.custom_name:
             return self.custom_name
 
-        # TODO: Sanitize the name; remove special characters
         if self.order:
-            return f"{self.order}. {self.name}"
+            return f"{self.order}. {sanitize_name(self.name)}"
         else:
-            return self.name
+            return sanitize_name(self.name)
 
     @property
     def height(self) -> int:
@@ -67,8 +67,10 @@ class NodeProperties(NodeLogs):
             if self.parent
             else Path("Cursos") / self.formatted_name
         )
-        # TODO: Identify when its a leaf node, beacause probabily we not will create folders for leaf nodes, just files;
-        path.mkdir(parents=True, exist_ok=True)
+
+        # just create folder for parents of content/file
+        if self.type != "content":
+            path.mkdir(parents=True, exist_ok=True)
 
         return path
 
@@ -84,6 +86,8 @@ class Node(NodeProperties):
         settings: list[Setting],
         status: str = "stopped",
         *,
+        should_download: bool = True,
+        custom_name: Optional[str] = None,
         id: Optional[int] = None,
         order: Optional[int] = None,
         url: str = "",
@@ -93,6 +97,8 @@ class Node(NodeProperties):
         self.name = name
         self.type = type
         self.order = order
+        self.should_download = should_download
+        self.custom_name = custom_name
         self.status = status
         self.url = url
         self.prisma = prisma
@@ -133,9 +139,16 @@ class Node(NodeProperties):
         self.id = self._node.id
 
     @abstractmethod
-    async def download(self):
+    async def _download(self):
         """Download the node and the children"""
         pass
+
+    async def download(self):
+        if not self.should_download:
+            await self.log("node_marked_as_not_be_downloaded")
+            return
+        await self.load_children()
+        await self._download()
 
     @classmethod
     def create_child(cls, **kwargs):
@@ -160,6 +173,10 @@ class Node(NodeProperties):
         for child_db in children_db:
             child_dump = child_db.model_dump()
             child_dump.update(self.NODE_DEFAULTS)
+            child_dump.update(
+                should_download=child_dump.get("shouldDownload", True),
+                extra_infos=json.loads(child_dump.get("extraInfos", "{}")),
+            )
             child = self.create_child(**child_dump)
             self.children.append(child)
 

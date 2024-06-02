@@ -1,5 +1,7 @@
-from typing import Callable, Optional
+import re
+from typing import Callable, Iterable, Optional
 
+from app.scripts.base.constants import POSSIBLE_QUALITIES, QUALITIES_PRIORITY
 from bs4 import BeautifulSoup, NavigableString, Tag
 
 
@@ -53,3 +55,28 @@ def get_node_default_params(instance: object) -> dict:
         "settings": getattr(instance, "settings"),
         "session": getattr(instance, "session"),
     }
+
+
+def get_best_quality(qualities: Iterable[POSSIBLE_QUALITIES]) -> POSSIBLE_QUALITIES:
+    """Get the best quality from the given qualities
+
+    Args:
+        qualities (Iterable[POSSIBLE_QUALITIES]): The qualities
+
+    Returns:
+        str: The best quality
+    """
+    return min(qualities, key=lambda q: QUALITIES_PRIORITY[q])
+
+
+def sanitize_name(name: str) -> str:
+    """Make the name folder friendly
+    - remove special characters to create folder/file names safely
+
+    Args:
+        name (str): The name
+
+    Returns:
+        str: The sanitized name
+    """
+    return re.sub(r"[?<>/:;*&$#@!\"'{}\\+=^]", "_", name).strip()
