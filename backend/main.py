@@ -25,4 +25,4 @@ app.add_event_handler("shutdown", shutdown)
 
 @app.get("/")
 def read_root():
-    return {"message": "Bem vindo ao Courses Downloader App"}
+    return {"message": "Bem vindo ao DuckDL"}

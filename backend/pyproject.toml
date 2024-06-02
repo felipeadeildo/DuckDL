@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "coursesdownloader-backend"
+name = "duckdl-backend"
 version = "0.1.0"
 description = ""
 authors = ["Felipe Adeildo <felipe.adeildo0@gmail.com>"]

@@ -23,9 +23,7 @@ autoRefresh()
 
 <template>
   <div class="container mx-auto">
-    <h1 class="text-3xl text-center my-2 animate-bounce">
-      Bem vindo ao Courses Downloader
-    </h1>
+    <h1 class="text-3xl text-center my-2 animate-bounce">Bem vindo ao DuckDL</h1>
 
     <div>
       <h3 class="text-center font-bold text-xl">Contas</h3>
