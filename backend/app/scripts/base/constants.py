@@ -11,6 +11,11 @@ MESSAGE_KEYS = Literal[
     "account_products_listed_success",
     "node_status_block_download",
     "node_class_not_found",
+    "node_name_not_found",
+    "node_start_mapping_children",
+    "node_success_mapped",
+    "node_start_download",
+    "node_success_downloaded",
 ]
 
 MESSAGE_CONTENTS: Mapping[MESSAGE_KEYS, Tuple[LOG_LEVELS, str]] = {
@@ -39,5 +44,25 @@ MESSAGE_CONTENTS: Mapping[MESSAGE_KEYS, Tuple[LOG_LEVELS, str]] = {
     "node_class_not_found": (
         "error",
         "Classe do nó não encontrada. Verifique se o nó foi adicionado corretamente. Chave: {key}",
+    ),
+    "node_name_not_found": (
+        "error",
+        "Erro eo tentar obter o nome do '{node_type}'. Será utilizado algo como '{order}. {node_type}' na nomeclatura.",
+    ),
+    "node_start_mapping_children": (
+        "info",
+        "Iniciando o mapeamento dos filhos do nó. Este processo pode demorar alguns segundos.",
+    ),
+    "node_success_mapped": (
+        "info",
+        "Mapeamento concluído com sucesso. Foram encontrados {count} {children_type}s",
+    ),
+    "node_start_download": (
+        "info",
+        "Iniciando o download. Este processo pode demorar alguns segundos (talvez minutos.)",
+    ),
+    "node_success_downloaded": (
+        "info",
+        "Download concluído com sucesso!!",
     ),
 }

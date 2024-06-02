@@ -3,13 +3,32 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Optional
 
+from app.scripts.base.constants import MESSAGE_CONTENTS, MESSAGE_KEYS
 from app.scripts.base.session import AsyncSession
+from app.scripts.base.utils import get_node_default_params
+from app.services.log import LogService
 from app.services.node import NodeService
 from prisma import Prisma
 from prisma.models import Account, Setting
+from prisma.models import Node as NodeDB
 
 
-class NodeProperties(ABC):
+class NodeLogs(ABC):
+    account: Account
+    log_service: LogService
+    id: int
+
+    async def log(self, type: MESSAGE_KEYS, **context):
+        level, message = MESSAGE_CONTENTS[type]
+        log_fn = getattr(self.log_service, level)
+        await log_fn(
+            message=message.format(**context),
+            account_id=self.account.id,
+            node_id=self.id,
+        )
+
+
+class NodeProperties(NodeLogs):
     id: int
     name: str
     type: str
@@ -23,7 +42,7 @@ class NodeProperties(ABC):
     extra_infos: dict
     custom_name: Optional[str]
     parent: Optional["Node"]
-    children: list["Node"] = []
+    children: list["Node"]
     session: AsyncSession
 
     @property
@@ -63,36 +82,41 @@ class Node(NodeProperties):
         prisma: Prisma,
         account: Account,
         settings: list[Setting],
+        status: str = "stopped",
         *,
         id: Optional[int] = None,
         order: Optional[int] = None,
         url: str = "",
         parent: Optional["Node"] = None,
-        children: list["Node"] = [],
         **extra_infos,
     ):
         self.name = name
         self.type = type
         self.order = order
+        self.status = status
         self.url = url
         self.prisma = prisma
         self.session = session
         self.parent = parent
-        self.children = children
         self.extra_infos = extra_infos
         self.account = account
         self.settings = settings
-        self.__id = id
+        self.id = id or -1
+        self.children = []
+
+        self.NODE_DEFAULTS = get_node_default_params(self)
+        self.NODE_DEFAULTS.update(parent=self)
 
         self.node_service = NodeService(prisma)
+        self.log_service = LogService(prisma)
 
     async def flush_node_db(self):
         if getattr(self, "_node", None):
             return
-        if self.__id:
-            self._node = await self.node_service.get_node(self.__id)
+        if self.id > 0:
+            self._node = await self.node_service.get_node(self.id)
             if not self._node:
-                raise ValueError(f"Node with id {self.__id} not found")
+                raise ValueError(f"Node with id {self.id} not found")
         else:
             self._node = await self.node_service.create_node(
                 {
@@ -113,7 +137,33 @@ class Node(NodeProperties):
         """Download the node and the children"""
         pass
 
-    @abstractmethod
+    @classmethod
+    def create_child(cls, **kwargs):
+        return cls(**kwargs)
+
     async def load_children(self):
-        """Load the children of the node"""
+        """Load children from db or from the platform
+
+        If children are defined in the db, load them from the db
+        Otherwise, load them from the platform
+        """
+        if self.status in ("mapped", "downloaded", "download_error"):
+            children_db = await self.node_service.get_children(self.id)
+            if len(children_db) > 0:
+                self.__instanciate_children(children_db)
+        else:
+            await self._load_children()
+
+    def __instanciate_children(self, children_db: list[NodeDB]):
+        """Instanciate children from db to avoid loading them from the platform"""
+        self.children = []
+        for child_db in children_db:
+            child_dump = child_db.model_dump()
+            child_dump.update(self.NODE_DEFAULTS)
+            child = self.create_child(**child_dump)
+            self.children.append(child)
+
+    @abstractmethod
+    async def _load_children(self):
+        """Load the children of the node (this is the real implementation of load children)"""
         pass
