@@ -4,7 +4,7 @@ import type { Log } from "~/types"
 useHead({ title: "LOGs" })
 
 const page = ref(1)
-const perPage = ref(10)
+const perPage = ref(15)
 
 type LogsPagination = {
   data: Log[]
@@ -33,6 +33,8 @@ autoRefresh()
 onBeforeUnmount(() => {
   clearTimeout(timeoutId)
 })
+
+watch([page, perPage], () => fetchLogs(), { deep: true })
 
 const columns = [
   {
@@ -76,7 +78,7 @@ const columns = [
     }"
   >
     <template #node-data="{ row }">
-      <span>{{ row.Node ? `${row.Node.name} (v${row.Node.type})` : "-" }}</span>
+      <span>{{ row.Node ? `${row.Node.name} (${row.Node.type})` : "-" }}</span>
     </template>
 
     <template #account-data="{ row }">
