@@ -1,7 +1,7 @@
 from typing import Literal
 
 from prisma import Prisma
-from prisma.types import NodeCreateInput
+from prisma.types import NodeCreateInput, NodeInclude
 
 
 class NodeService:
@@ -12,11 +12,14 @@ class NodeService:
         return await self.prisma.node.create(data=node)
 
     async def get_node(self, node_id: int):
+        includes: NodeInclude = {
+            "Account": {"include": {"Platform": True}},
+        }
         return await self.prisma.node.find_unique(
-            where={"id": node_id}, include={"Account": {"include": {"Platform": True}}}
+            where={"id": node_id}, include=includes
         )
 
-    async def set_node_status(
+    async def set_status(
         self,
         node_id: int,
         status: Literal[
@@ -32,4 +35,10 @@ class NodeService:
         return await self.prisma.node.update(
             where={"id": node_id},
             data={"status": status},
+        )
+
+    async def get_children(self, node_id: int):
+        return await self.prisma.node.find_many(
+            where={"parentId": node_id},
+            include={"Account": {"include": {"Platform": True}}},
         )

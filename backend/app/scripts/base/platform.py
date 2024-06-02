@@ -1,11 +1,10 @@
 from abc import ABC, abstractmethod
-from typing import Callable, Optional
 
 from app.scripts.base.constants import MESSAGE_CONTENTS, MESSAGE_KEYS
 from app.scripts.base.session import AsyncSession
+from app.scripts.base.utils import get_node_default_params
 from app.scripts.node import nodes
 from app.services import AccountService, LogService
-from bs4 import BeautifulSoup, NavigableString, Tag
 from prisma import Prisma
 from prisma.models import Account, Node, Setting
 
@@ -33,12 +32,7 @@ class PlatformDownloader(ABC, PlatformLogs):
         self.settings = settings
         # TODO: Implements the `use_cloudscraper` condition call
         self._create_session()
-        self.NODE_DEFAULTS = {
-            "prisma": self.prisma,
-            "account": self.account,
-            "settings": self.settings,
-            "session": self.session,
-        }
+        self.NODE_DEFAULTS = get_node_default_params(self)
 
     def _create_session(self, use_cloudscraper: bool = False):
         """Create a requests.Session instance to make requests "completely" safe"""
@@ -56,6 +50,12 @@ class PlatformDownloader(ABC, PlatformLogs):
                 }
             )
 
+    async def login(self):
+        if self.is_logged:
+            return
+        await self._login()
+        self.NODE_DEFAULTS.update(session=self.session)
+
     @abstractmethod
     async def _login(self):
         """Do the login process"""
@@ -66,6 +66,8 @@ class PlatformDownloader(ABC, PlatformLogs):
         current_status = node.status
         if current_status not in ("stopped", "downloaded", "download_error", "mapped"):
             return await self.log("node_status_block_download", status=current_status)
+
+        await self.login()
 
         key = node.Account.Platform.key  # type: ignore [account > platform > key isnt None]
 
@@ -108,14 +110,5 @@ class PlatformDownloader(ABC, PlatformLogs):
 
         await self.log("account_start_listing_products")
 
+        await self.login()
         return await self._list_products()
-
-    async def get_soup(self, method: Callable, url: str, *args, **kwargs):
-        res = await method(url, *args, **kwargs)
-        return BeautifulSoup(res.content, "html.parser")
-
-    @classmethod
-    def valid_tag(cls, tag: Optional[Tag | NavigableString]) -> Optional[Tag]:
-        if isinstance(tag, NavigableString) or tag is None:
-            return None
-        return tag

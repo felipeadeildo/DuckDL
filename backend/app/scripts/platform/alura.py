@@ -1,4 +1,5 @@
 from app.scripts.base.platform import PlatformDownloader
+from app.scripts.base.utils import get_soup, valid_tag
 from app.scripts.node import AluraNode
 from bs4 import BeautifulSoup
 
@@ -26,9 +27,6 @@ class AluraDownloader(PlatformDownloader):
 
     async def _list_products(self):
         if not self.is_logged:
-            await self._login()
-
-        if not self.is_logged:
             return
 
         await self.__get_products()
@@ -37,7 +35,7 @@ class AluraDownloader(PlatformDownloader):
         )
 
     async def __get_products(self) -> list[AluraNode]:
-        soup = await self.get_soup(self.session.get, f"{self.BASE_URL}/courses")
+        soup = await get_soup(self.session.get, f"{self.BASE_URL}/courses")
 
         products = []
         while True:
@@ -53,13 +51,13 @@ class AluraDownloader(PlatformDownloader):
                 await node.flush_node_db()
                 products.append(node)
 
-            next_page = self.valid_tag(
+            next_page = valid_tag(
                 soup.find("a", {"class": "busca-paginacao-linksProximos"})
             )
             if not next_page:
                 break
 
-            soup = await self.get_soup(
+            soup = await get_soup(
                 self.session.get, f"{self.BASE_URL}/{next_page.get('href')}"
             )
 
