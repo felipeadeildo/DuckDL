@@ -129,7 +129,8 @@ watch(
                 variant="outline"
                 color="green"
                 icon="i-heroicons-document-magnifying-glass"
-                @click="!canStartMapping(product)"
+                :disabled="!canStartMapping(product)"
+                @click="startNodeMapping(product)"
               >
                 Mapear
               </UButton>
