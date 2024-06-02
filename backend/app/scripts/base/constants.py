@@ -16,6 +16,8 @@ MESSAGE_KEYS = Literal[
     "node_success_mapped",
     "node_start_download",
     "node_success_downloaded",
+    "node_marked_as_not_be_downloaded",
+    "content_already_downloaded",
 ]
 
 MESSAGE_CONTENTS: Mapping[MESSAGE_KEYS, Tuple[LOG_LEVELS, str]] = {
@@ -65,4 +67,28 @@ MESSAGE_CONTENTS: Mapping[MESSAGE_KEYS, Tuple[LOG_LEVELS, str]] = {
         "info",
         "Download concluído com sucesso!!",
     ),
+    "node_marked_as_not_be_downloaded": (
+        "info",
+        "Download pulado uma vez que foi marcado como 'Não baixar'.",
+    ),
+    "content_already_downloaded": (
+        "info",
+        "Conteúdo já foi baixado numa execução anterior do script.",
+    ),
+}
+
+
+POSSIBLE_QUALITIES = Literal[
+    "hd", "sd", "1080p", "720p", "480p", "360p", "240p", "144p"
+]
+
+QUALITIES_PRIORITY: Mapping[POSSIBLE_QUALITIES, int] = {
+    "hd": 1,
+    "sd": 3,
+    "1080p": 0,
+    "720p": 1,
+    "480p": 2,
+    "360p": 3,
+    "240p": 4,
+    "144p": 5,
 }
