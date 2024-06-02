@@ -18,6 +18,7 @@ MESSAGE_KEYS = Literal[
     "node_success_downloaded",
     "node_marked_as_not_be_downloaded",
     "content_already_downloaded",
+    "node_status_block_mapping",
 ]
 
 MESSAGE_CONTENTS: Mapping[MESSAGE_KEYS, Tuple[LOG_LEVELS, str]] = {
@@ -74,6 +75,10 @@ MESSAGE_CONTENTS: Mapping[MESSAGE_KEYS, Tuple[LOG_LEVELS, str]] = {
     "content_already_downloaded": (
         "info",
         "Conteúdo já foi baixado numa execução anterior do script.",
+    ),
+    "node_status_block_mapping": (
+        "error",
+        "Atualmente o nó encontra-se no estado {status} que impede o mapeamento.",
     ),
 }
 

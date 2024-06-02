@@ -2,7 +2,11 @@ from app.models.pagination import NodePagination
 from app.models.schemas import AccountCreate, AccountOut
 from app.prisma import db
 from app.services import AccountService
-from app.tasks.account import download_product_task, list_account_products_task
+from app.tasks.account import (
+    download_product_task,
+    list_account_products_task,
+    map_product_task,
+)
 from fastapi import APIRouter
 from prisma.types import AccountUpdateInput
 
@@ -57,4 +61,10 @@ async def start_download_product(product_id: int):
     # await service.set_account_status(account_id, "downloading_products")
 
     download_product_task(product_id)
+    return "Ok"
+
+
+@router.post("/start_map_product/{product_id}")
+async def start_map_product(product_id: int):
+    map_product_task(product_id)
     return "Ok"

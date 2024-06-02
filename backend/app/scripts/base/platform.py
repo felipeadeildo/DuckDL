@@ -84,10 +84,28 @@ class PlatformDownloader(ABC, PlatformLogs):
         node_instance = node_class(**node_dump)
         await node_instance.download()
 
-    @abstractmethod
-    async def map_product(self, node: Node):
+    async def start_mapping(self, node: Node):
         """This will map all the tree of the given product (node)"""
-        pass
+        current_status = node.status
+        if current_status not in ("stopped", "mapped", "mapped_error"):
+            return await self.log("node_status_block_mapping", status=current_status)
+
+        await self.login()
+
+        key = node.Account.Platform.key  # type: ignore [account > platform > key isnt None]
+
+        node_class = nodes.get(key)
+        if node_class is None:
+            return await self.log("node_class_not_found", key=key)
+
+        node_dump = node.model_dump()
+        node_dump.update(self.NODE_DEFAULTS)
+        node_dump.update(
+            custom_name=node_dump.get("customName"),
+        )
+
+        node_instance = node_class(**node_dump)
+        await node_instance.map()
 
     @abstractmethod
     async def _list_products(self):

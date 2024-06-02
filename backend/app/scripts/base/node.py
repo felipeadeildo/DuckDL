@@ -9,9 +9,8 @@ from app.scripts.base.utils import get_node_default_params, sanitize_name
 from app.services.log import LogService
 from app.services.node import NodeService
 from prisma import Prisma
-from prisma.models import Account
+from prisma.models import Account, Setting
 from prisma.models import Node as NodeDB
-from prisma.models import Setting
 
 
 class NodeLogs(ABC):
@@ -184,3 +183,21 @@ class Node(NodeProperties):
     async def _load_children(self):
         """Load the children of the node (this is the real implementation of load children)"""
         pass
+
+    async def map(self):
+        await self.node_service.delete_children(self.id)
+        await self.node_service.set_status(self.id, "mapping")
+        await self.load_children()
+
+        for child in self.children:
+            await child.map()
+
+        await self.node_service.set_status(self.id, "mapped")
+        if self.children:
+            children_type = self.children[0].type
+            if children_type != "content":
+                await self.log(
+                    "node_success_mapped",
+                    count=len(self.children),
+                    children_type=self.children[0].type,
+                )

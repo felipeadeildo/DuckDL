@@ -42,3 +42,7 @@ class NodeService:
             where={"parentId": node_id},
             include={"Account": {"include": {"Platform": True}}},
         )
+
+    async def delete_children(self, node_id: int):
+        # TODO: Delete alll the tree (children of the childrens)
+        await self.prisma.node.delete_many(where={"parentId": node_id})
