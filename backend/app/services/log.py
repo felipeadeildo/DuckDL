@@ -86,7 +86,10 @@ class LogService:
                 skip=skip,
                 take=take,
                 where=query,
-                include={"Account": {"include": {"Platform": True}}, "Node": True},
+                include={
+                    "Account": {"include": {"Platform": True}},
+                    "Node": {"include": {"Account": {"include": {"Platform": True}}}},
+                },
                 order={"id": "desc"},
             )
 
