@@ -78,7 +78,7 @@ const columns = [
     }"
   >
     <template #node-data="{ row }">
-      <span>{{ row.Node ? `${row.Node.name} (${row.Node.type})` : "-" }}</span>
+      <span>{{ row.Node ? getNodeName(row.Node) : "-" }}</span>
     </template>
 
     <template #account-data="{ row }">

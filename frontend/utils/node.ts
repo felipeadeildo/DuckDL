@@ -34,3 +34,16 @@ export const canStartMapping = (node: Node) =>
 
 export const canStartDownload = (node: Node) =>
   ["stopped", "downloaded", "download_error", "mapped"].includes(node.status)
+
+export const getNodeName = (node: Node) => {
+  let nodeName = ""
+  if (node.customName) {
+    nodeName = node.customName
+  } else if (node.order) {
+    nodeName = `${node.order} - ${node.name}`
+  } else {
+    nodeName = node.name
+  }
+
+  return `${nodeName} (${node.type})`
+}
