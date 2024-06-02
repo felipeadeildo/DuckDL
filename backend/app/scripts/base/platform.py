@@ -77,6 +77,9 @@ class PlatformDownloader(ABC, PlatformLogs):
 
         node_dump = node.model_dump()
         node_dump.update(self.NODE_DEFAULTS)
+        node_dump.update(
+            custom_name=node_dump.get("customName"),
+        )
 
         node_instance = node_class(**node_dump)
         await node_instance.download()
